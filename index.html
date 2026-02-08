@@ -2,290 +2,331 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1ねんせい かんじコレクション</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>1ねんせい かんじマスター</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&display=swap" rel="stylesheet">
+
     <style>
+        /* 全体の設定 */
         body {
-            font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
-            background-color: #E0F7FA;
+            font-family: 'Mochiy Pop One', sans-serif; /* かわいいフォント適用 */
+            background-color: #FFF3E0; /* やさしいオレンジ背景 */
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            color: #4E342E;
+            overflow-x: hidden;
+            touch-action: manipulation; /* ダブルタップズーム防止 */
         }
 
-        h1 {
-            color: #006064;
-            margin: 15px 0;
-            font-size: 1.5rem;
-            text-align: center;
-        }
-
-        /* --- 画面切り替え用の設定 --- */
+        /* 画面切り替えの仕組み */
         .screen {
-            display: none; /* 基本は非表示 */
-            width: 100%;
-            max-width: 600px;
+            display: none;
             flex-direction: column;
             align-items: center;
-            padding-bottom: 50px;
+            justify-content: center;
+            width: 100%;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
         .screen.active {
-            display: flex; /* activeクラスがついた画面だけ表示 */
+            display: flex;
+            opacity: 1;
         }
 
-        /* --- 一覧画面（リスト）のスタイル --- */
+        /* --- 1. タイトル画面 --- */
+        #title-screen {
+            background: linear-gradient(135deg, #FFCC80 0%, #FFAB91 100%);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            color: #FFF;
+            text-shadow: 3px 3px 0px #BF360C;
+            text-align: center;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .start-btn {
+            background-color: #FFF;
+            color: #E65100;
+            font-size: 1.5rem;
+            padding: 15px 50px;
+            border-radius: 50px;
+            border: none;
+            box-shadow: 0 6px 0px #E65100;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            margin-top: 30px;
+        }
+
+        .start-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0px #E65100;
+        }
+
+        /* --- 2. 一覧画面 --- */
+        #list-screen {
+            justify-content: flex-start; /* 上寄せ */
+            padding-top: 40px;
+        }
+
+        .header-info {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .star-display {
+            font-size: 1.2rem;
+            color: #F57F17;
+        }
+
         .kanji-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-            gap: 10px;
-            width: 90%;
-            padding: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+            gap: 12px;
+            width: 100%;
+            max-width: 800px;
+            padding-bottom: 50px;
         }
 
         .kanji-card {
             background: white;
-            border-radius: 10px;
             aspect-ratio: 1 / 1;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2rem;
-            color: #333;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            position: relative; /* 星の位置合わせ用 */
-            border: 3px solid transparent;
+            box-shadow: 0 4px 0px #D7CCC8;
+            position: relative;
             transition: transform 0.1s;
+            border: 2px solid transparent;
         }
 
         .kanji-card:active {
-            transform: scale(0.95);
+            transform: translateY(2px);
+            box-shadow: 0 2px 0px #D7CCC8;
         }
 
+        /* クリア済みのデザイン */
         .kanji-card.completed {
-            border-color: #FFD700; /* クリアしたら枠が金になる */
             background-color: #FFFDE7;
+            border-color: #FFD700;
+            color: #F57F17;
         }
 
-        /* 星マーク */
-        .star-badge {
+        .kanji-card.completed::after {
+            content: "★";
             position: absolute;
-            top: -5px;
-            right: -5px;
+            top: -8px;
+            right: -8px;
             font-size: 1.2rem;
-            display: none; /* 最初は隠す */
+            color: #FFD700;
+            text-shadow: 1px 1px 0 #FFF;
         }
 
-        .kanji-card.completed .star-badge {
-            display: block; /* クリア済みなら表示 */
+        /* --- 3. 練習画面 --- */
+        #practice-screen {
+            background-color: #E0F7FA;
         }
 
-        /* --- 練習画面のスタイル --- */
-        .practice-area {
-            background: white;
-            padding: 20px;
+        .practice-header {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .back-btn {
+            background: #00838F;
+            color: white;
+            border: none;
+            padding: 8px 16px;
             border-radius: 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            margin: 20px 0;
-            border: 5px solid #4DD0E1;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .target-char-display {
+            font-size: 2rem;
+            color: #006064;
+        }
+
+        .canvas-container {
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 8px 0px #4DD0E1;
+            margin-bottom: 20px;
             position: relative;
         }
 
         #character-target-div {
             width: 300px;
             height: 300px;
-            border: 2px dashed #B2EBF2;
-            background-color: #FAFAFA;
+            /* スマホでの誤操作防止 */
+            touch-action: none;
         }
 
-        .reading-display {
-            font-size: 1.5rem;
-            color: #00838F;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        #status-msg {
-            height: 2rem;
+        #message-area {
+            height: 40px;
             font-size: 1.2rem;
-            font-weight: bold;
             color: #006064;
             text-align: center;
-            margin-bottom: 10px;
-        }
-
-        /* ボタン類 */
-        button {
-            padding: 10px 20px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
             font-weight: bold;
-            margin: 5px;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
         }
 
-        button.back-btn {
-            background-color: #78909C;
-            color: white;
-            align-self: flex-start;
-            margin-left: 20px;
+        /* アニメーション用 */
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
         }
 
-        button.reset-btn {
-            background-color: #FF7043;
-            color: white;
-        }
-
-        /* データ削除ボタン（小さく下に配置） */
-        .data-reset {
-            margin-top: 30px;
-            font-size: 0.8rem;
-            color: #aaa;
-            background: none;
-            border: 1px solid #ccc;
-            box-shadow: none;
+        .star-animation {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10rem;
+            color: #FFD700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            animation: pop 0.5s ease-out;
+            pointer-events: none;
+            display: none;
+            z-index: 100;
         }
 
     </style>
 </head>
 <body>
 
-    <h1>1ねんせい かんじコレクション</h1>
+    <div id="title-screen" class="screen active">
+        <div class="game-title">1ねんせい<br>かんじ<br>マスター</div>
+        <button class="start-btn" onclick="showScreen('list-screen')">スタート！</button>
+    </div>
 
-    <div id="list-screen" class="screen active">
-        <div style="text-align: center; margin-bottom: 10px;">
-            あつめた星： <span id="star-count" style="font-size:1.5rem; color:#FF8F00; font-weight:bold;">0</span> / 80
+    <div id="list-screen" class="screen">
+        <div class="header-info">
+            <div>あつめた星： <span id="star-counter" style="font-size:1.5rem; font-weight:bold;">0</span> / 80</div>
         </div>
         <div class="kanji-grid" id="kanji-grid">
             </div>
-
-        <button class="data-reset" onclick="clearData()">せーブデータをけす</button>
+        <button class="back-btn" onclick="resetData()" style="margin-top:20px; background:#B0BEC5; font-size:0.8rem;">データを消す</button>
     </div>
 
     <div id="practice-screen" class="screen">
-        <button class="back-btn" onclick="goBack()">＜ もどる</button>
-        
-        <div style="text-align: center; margin-top:10px;">
-            <div id="current-reading" class="reading-display"></div>
-        </div>
+        <div class="practice-header">
+            <button class="back-btn" onclick="showScreen('list-screen')">もどる</button>
+            <div id="current-reading" class="target-char-display">よみ</div>
+            <div style="width: 60px;"></div> </div>
 
-        <div class="practice-area">
+        <div class="canvas-container">
             <div id="character-target-div"></div>
+            <div id="big-star" class="star-animation">★</div>
         </div>
 
-        <div id="status-msg">なぞってみよう！</div>
+        <div id="message-area">なぞってみよう！</div>
 
-        <div>
-            <button class="reset-btn" onclick="retry()">かきなおす</button>
-        </div>
+        <button class="back-btn" onclick="retry()" style="background:#FF7043; margin-top:10px;">書き直す</button>
     </div>
 
     <script>
-        // 漢字データ（80文字）
+        // --- データ設定 ---
         const kanjiData = [
-            { char: '一', reading: 'いち' }, { char: '右', reading: 'みぎ' },
-            { char: '雨', reading: 'あめ' }, { char: '円', reading: 'えん' },
-            { char: '王', reading: 'おう' }, { char: '音', reading: 'おと' },
-            { char: '下', reading: 'した' }, { char: '火', reading: 'ひ' },
-            { char: '花', reading: 'はな' }, { char: '貝', reading: 'かい' },
-            { char: '学', reading: 'まなぶ' }, { char: '気', reading: 'き' },
-            { char: '九', reading: 'きゅう' }, { char: '休', reading: 'やすむ' },
-            { char: '玉', reading: 'たま' }, { char: '金', reading: 'かね' },
-            { char: '空', reading: 'そら' }, { char: '月', reading: 'つき' },
-            { char: '犬', reading: 'いぬ' }, { char: '見', reading: 'みる' },
-            { char: '五', reading: 'ご' }, { char: '口', reading: 'くち' },
-            { char: '校', reading: 'こう' }, { char: '左', reading: 'ひだり' },
-            { char: '三', reading: 'さん' }, { char: '山', reading: 'やま' },
-            { char: '子', reading: 'こ' }, { char: '四', reading: 'よん' },
-            { char: '糸', reading: 'いと' }, { char: '字', reading: 'じ' },
-            { char: '耳', reading: 'みみ' }, { char: '七', reading: 'なな' },
-            { char: '車', reading: 'くるま' }, { char: '手', reading: 'て' },
-            { char: '十', reading: 'じゅう' }, { char: '出', reading: 'でる' },
-            { char: '女', reading: 'おんな' }, { char: '小', reading: 'ちいさい' },
-            { char: '上', reading: 'うえ' }, { char: '森', reading: 'もり' },
-            { char: '人', reading: 'ひと' }, { char: '水', reading: 'みず' },
-            { char: '正', reading: 'ただしい' }, { char: '生', reading: 'いきる' },
-            { char: '青', reading: 'あお' }, { char: '夕', reading: 'ゆう' },
-            { char: '石', reading: 'いし' }, { char: '赤', reading: 'あか' },
-            { char: '千', reading: 'せん' }, { char: '川', reading: 'かわ' },
-            { char: '先', reading: 'さき' }, { char: '早', reading: 'はやい' },
-            { char: '草', reading: 'くさ' }, { char: '足', reading: 'あし' },
-            { char: '村', reading: 'むら' }, { char: '大', reading: 'おおきい' },
-            { char: '男', reading: 'おとこ' }, { char: '竹', reading: 'たけ' },
-            { char: '中', reading: 'なか' }, { char: '虫', reading: 'むし' },
-            { char: '町', reading: 'まち' }, { char: '天', reading: 'てん' },
-            { char: '田', reading: 'た' }, { char: '土', reading: 'つち' },
-            { char: '二', reading: 'に' }, { char: '日', reading: 'ひ' },
-            { char: '入', reading: 'はいる' }, { char: '年', reading: 'とし' },
-            { char: '白', reading: 'しろ' }, { char: '八', reading: 'はち' },
-            { char: '百', reading: 'ひゃく' }, { char: '文', reading: 'ぶん' },
-            { char: '木', reading: 'き' }, { char: '本', reading: 'ほん' },
-            { char: '名', reading: 'な' }, { char: '目', reading: 'め' },
-            { char: '立', reading: 'たつ' }, { char: '力', reading: 'ちから' },
-            { char: '林', reading: 'はやし' }, { char: '六', reading: 'ろく' }
+            { char: '一', reading: 'いち' }, { char: '右', reading: 'みぎ' }, { char: '雨', reading: 'あめ' }, { char: '円', reading: 'えん' },
+            { char: '王', reading: 'おう' }, { char: '音', reading: 'おと' }, { char: '下', reading: 'した' }, { char: '火', reading: 'ひ' },
+            { char: '花', reading: 'はな' }, { char: '貝', reading: 'かい' }, { char: '学', reading: 'まなぶ' }, { char: '気', reading: 'き' },
+            { char: '九', reading: 'きゅう' }, { char: '休', reading: 'やすむ' }, { char: '玉', reading: 'たま' }, { char: '金', reading: 'かね' },
+            { char: '空', reading: 'そら' }, { char: '月', reading: 'つき' }, { char: '犬', reading: 'いぬ' }, { char: '見', reading: 'みる' },
+            { char: '五', reading: 'ご' }, { char: '口', reading: 'くち' }, { char: '校', reading: 'こう' }, { char: '左', reading: 'ひだり' },
+            { char: '三', reading: 'さん' }, { char: '山', reading: 'やま' }, { char: '子', reading: 'こ' }, { char: '四', reading: 'よん' },
+            { char: '糸', reading: 'いと' }, { char: '字', reading: 'じ' }, { char: '耳', reading: 'みみ' }, { char: '七', reading: 'なな' },
+            { char: '車', reading: 'くるま' }, { char: '手', reading: 'て' }, { char: '十', reading: 'じゅう' }, { char: '出', reading: 'でる' },
+            { char: '女', reading: 'おんな' }, { char: '小', reading: 'ちいさい' }, { char: '上', reading: 'うえ' }, { char: '森', reading: 'もり' },
+            { char: '人', reading: 'ひと' }, { char: '水', reading: 'みず' }, { char: '正', reading: 'ただしい' }, { char: '生', reading: 'いきる' },
+            { char: '青', reading: 'あお' }, { char: '夕', reading: 'ゆう' }, { char: '石', reading: 'いし' }, { char: '赤', reading: 'あか' },
+            { char: '千', reading: 'せん' }, { char: '川', reading: 'かわ' }, { char: '先', reading: 'さき' }, { char: '早', reading: 'はやい' },
+            { char: '草', reading: 'くさ' }, { char: '足', reading: 'あし' }, { char: '村', reading: 'むら' }, { char: '大', reading: 'おおきい' },
+            { char: '男', reading: 'おとこ' }, { char: '竹', reading: 'たけ' }, { char: '中', reading: 'なか' }, { char: '虫', reading: 'むし' },
+            { char: '町', reading: 'まち' }, { char: '天', reading: 'てん' }, { char: '田', reading: 'た' }, { char: '土', reading: 'つち' },
+            { char: '二', reading: 'に' }, { char: '日', reading: 'ひ' }, { char: '入', reading: 'はいる' }, { char: '年', reading: 'とし' },
+            { char: '白', reading: 'しろ' }, { char: '八', reading: 'はち' }, { char: '百', reading: 'ひゃく' }, { char: '文', reading: 'ぶん' },
+            { char: '木', reading: 'き' }, { char: '本', reading: 'ほん' }, { char: '名', reading: 'な' }, { char: '目', reading: 'め' },
+            { char: '立', reading: 'たつ' }, { char: '力', reading: 'ちから' }, { char: '林', reading: 'はやし' }, { char: '六', reading: 'ろく' }
         ];
 
-        // セーブデータの読み込み（ブラウザに保存されたデータを取得）
-        let progressData = JSON.parse(localStorage.getItem('kanjiAppProgress')) || {};
-
+        // 状態管理
+        let progress = JSON.parse(localStorage.getItem('kanjiMasterProgress')) || {};
         let writer;
-        let currentCharObj = null;
+        let currentChar = null;
 
-        // 初期化：一覧画面を作る
-        function initList() {
+        // --- 画面遷移 ---
+        function showScreen(screenId) {
+            // すべての画面を非表示
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            // 指定された画面を表示
+            document.getElementById(screenId).classList.add('active');
+
+            // 一覧画面を開くときはリストを更新
+            if (screenId === 'list-screen') {
+                renderList();
+            }
+        }
+
+        // --- 一覧画面の描画 ---
+        function renderList() {
             const grid = document.getElementById('kanji-grid');
-            grid.innerHTML = ''; // クリア
-            let starCount = 0;
+            grid.innerHTML = '';
+            let stars = 0;
 
             kanjiData.forEach(item => {
+                const isCompleted = progress[item.char];
+                if (isCompleted) stars++;
+
                 const card = document.createElement('div');
-                card.className = 'kanji-card';
+                card.className = `kanji-card ${isCompleted ? 'completed' : ''}`;
                 card.innerText = item.char;
-                
-                // 星マークの要素
-                const star = document.createElement('div');
-                star.className = 'star-badge';
-                star.innerText = '⭐';
-                card.appendChild(star);
-
-                // すでにクリア済みかチェック
-                if (progressData[item.char]) {
-                    card.classList.add('completed');
-                    starCount++;
-                }
-
-                // クリックしたら練習画面へ
                 card.onclick = () => startPractice(item);
+
                 grid.appendChild(card);
             });
 
-            document.getElementById('star-count').innerText = starCount;
+            document.getElementById('star-counter').innerText = stars;
         }
 
-        // 練習画面を開始する
-        function startPractice(charObj) {
-            currentCharObj = charObj;
-            
-            // 画面切り替え
-            document.getElementById('list-screen').classList.remove('active');
-            document.getElementById('practice-screen').classList.add('active');
+        // --- 練習開始 ---
+        function startPractice(item) {
+            currentChar = item;
+            showScreen('practice-screen');
 
-            // UI設定
-            document.getElementById('current-reading').innerText = `${charObj.char} （${charObj.reading}）`;
-            document.getElementById('status-msg').innerText = "なぞってみよう！";
-            document.getElementById('status-msg').style.color = "#006064";
-
-            // 描画エリアの準備
+            // UIリセット
+            document.getElementById('current-reading').innerText = `${item.char} (${item.reading})`;
+            document.getElementById('message-area').innerText = "じゅんばんに なぞろう！";
+            document.getElementById('message-area').style.color = "#006064";
             document.getElementById('character-target-div').innerHTML = '';
-            
-            writer = HanziWriter.create('character-target-div', charObj.char, {
+            document.getElementById('big-star').style.display = 'none'; // 星を隠す
+
+            // HanziWriter 初期化
+            writer = HanziWriter.create('character-target-div', item.char, {
                 width: 300,
                 height: 300,
                 padding: 10,
@@ -293,64 +334,66 @@
                 strokeAnimationSpeed: 1,
                 delayBetweenStrokes: 200,
                 radicalColor: '#168F16',
-                drawingWidth: 20, 
+                drawingWidth: 25, // 子供用に少し太く
+                outlineColor: '#DDD',
+                strokeColor: '#333',
                 highlightColor: '#FF7043',
             });
 
             startQuiz();
         }
 
+        // --- クイズ（なぞり書き）ロジック ---
         function startQuiz() {
             writer.quiz({
                 onMistake: function(strokeData) {
-                    document.getElementById('status-msg').innerText = "おしい！ここだよ！";
-                    document.getElementById('status-msg').style.color = "#D32F2F";
-                    writer.animateStroke(strokeData.strokeNum);
+                    document.getElementById('message-area').innerText = "おしい！ここだよ！";
+                    document.getElementById('message-area').style.color = "#D32F2F";
+                    writer.animateStroke(strokeData.strokeNum); // ヒントを表示
                 },
                 onCorrectStroke: function(strokeData) {
-                    document.getElementById('status-msg').innerText = "いいね！";
-                    document.getElementById('status-msg').style.color = "#388E3C";
+                    document.getElementById('message-area').innerText = "いいね！";
+                    document.getElementById('message-area').style.color = "#388E3C";
                 },
                 onComplete: function(summaryData) {
-                    document.getElementById('status-msg').innerText = "やったー！せいかい！⭐";
-                    document.getElementById('status-msg').style.color = "#FF8F00";
-                    
-                    // --- ここでセーブ ---
-                    saveProgress(currentCharObj.char);
+                    handleComplete();
                 }
             });
         }
 
-        // データを保存する関数
-        function saveProgress(char) {
-            progressData[char] = true;
-            localStorage.setItem('kanjiAppProgress', JSON.stringify(progressData));
-            // 1秒後に一覧に戻る（オプション）
-            setTimeout(goBack, 1500); 
-        }
+        // --- クリア時の処理 ---
+        function handleComplete() {
+            document.getElementById('message-area').innerText = "できたー！！";
+            document.getElementById('message-area').style.color = "#F57F17";
+            
+            // データを保存
+            progress[currentChar.char] = true;
+            localStorage.setItem('kanjiMasterProgress', JSON.stringify(progress));
 
-        // 一覧に戻る
-        function goBack() {
-            document.getElementById('practice-screen').classList.remove('active');
-            document.getElementById('list-screen').classList.add('active');
-            initList(); // 一覧を再描画して星を反映
+            // 派手な演出
+            const bigStar = document.getElementById('big-star');
+            bigStar.style.display = 'block';
+            
+            // 1.5秒後に一覧に戻る
+            setTimeout(() => {
+                showScreen('list-screen');
+            }, 1500);
         }
 
         function retry() {
-            startQuiz();
+            startPractice(currentChar);
         }
 
-        // データを全消去（デバッグ用・親御さん用）
-        function clearData() {
-            if(confirm('ほんとうに 星を ぜんぶ 消しますか？')) {
-                localStorage.removeItem('kanjiAppProgress');
-                progressData = {};
-                initList();
+        function resetData() {
+            if (confirm("ほんとうに データを けしますか？")) {
+                localStorage.removeItem('kanjiMasterProgress');
+                progress = {};
+                renderList();
             }
         }
 
-        // 開始
-        window.onload = initList;
+        // --- 初期化 ---
+        // 読み込み時は何もしない（HTMLでタイトル画面がactiveになっているため）
 
     </script>
 </body>
