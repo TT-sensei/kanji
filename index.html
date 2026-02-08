@@ -374,7 +374,6 @@
                     card.classList.add(currentMode === 'practice' ? 'cleared-practice' : 'cleared-test');
                 }
                 
-                // カードの表示は「常に漢字」でOK
                 card.innerHTML = `
                     ${item.char}
                     <div class="mark star-mark">⭐</div>
@@ -399,21 +398,19 @@
             const readingDisplay = document.getElementById('current-reading');
             
             if (currentMode === 'test') {
-                // 【ここが変わった】テストモードなら読み仮名だけを大きく表示！
                 screen.classList.add('test-bg');
                 msgArea.innerText = "この かんじ を かこう！";
                 msgArea.style.color = "#C62828";
                 
-                readingDisplay.innerText = item.reading; // 読みだけ
-                readingDisplay.style.fontSize = "3rem";  // 大きく
+                readingDisplay.innerText = item.reading; 
+                readingDisplay.style.fontSize = "3rem";
             } else {
-                // 練習モードなら漢字と読みを表示
                 screen.classList.remove('test-bg');
                 msgArea.innerText = "うすいせんを なぞろう！";
                 msgArea.style.color = "#006064";
                 
                 readingDisplay.innerText = `${item.char} (${item.reading})`;
-                readingDisplay.style.fontSize = "2rem"; // 普通
+                readingDisplay.style.fontSize = "2rem";
             }
 
             // UIリセット
@@ -428,7 +425,7 @@
                 width: 300,
                 height: 300,
                 padding: 10,
-                showOutline: !isTest, // テストなら下絵なし
+                showOutline: !isTest, 
                 strokeAnimationSpeed: 1,
                 delayBetweenStrokes: 200,
                 radicalColor: '#168F16',
@@ -436,7 +433,14 @@
                 outlineColor: '#DDD',
                 strokeColor: '#333',
                 highlightColor: '#FF7043',
-                showHintAfterMisses: 1 // テストでも間違えたらヒントを出す
+                showHintAfterMisses: 1,
+                
+                // 【重要】日本語の書き順データをロードする設定
+                charDataLoader: (char, onComplete) => {
+                    fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data-jp@0.5/${char}.json`)
+                        .then(res => res.json())
+                        .then(data => onComplete(data));
+                }
             });
 
             startQuiz();
