@@ -413,7 +413,7 @@
             currentChar = item;
             showScreen('practice-screen');
 
-            // ★メニューを隠す
+            // メニューを隠す
             document.getElementById('result-overlay').classList.remove('active');
 
             // 背景色とメッセージの切り替え
@@ -459,9 +459,10 @@
                 highlightColor: '#FF7043',
                 showHintAfterMisses: 1,
                 
-                // ★日本の書き順データ(hanzi-writer-data-jp)を使用
+                // ★修正点：日本の書き順データ(hanzi-writer-data-jp)を正しく指定
+                // URLに /data/ を追加しました
                 charDataLoader: (char, onComplete) => {
-                    fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data-jp@0.5/${char}.json`)
+                    fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data-jp@0.5/data/${char}.json`)
                         .then(res => {
                             if (!res.ok) throw new Error('JP Data not found');
                             return res.json();
