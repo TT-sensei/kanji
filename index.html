@@ -12,14 +12,15 @@
     <style>
         /* 全体の設定 */
         body {
-            font-family: 'Mochiy Pop One', sans-serif; /* かわいいフォント適用 */
-            background-color: #FFF3E0; /* やさしいオレンジ背景 */
+            font-family: 'Mochiy Pop One', sans-serif;
+            background-color: #FFF3E0;
             margin: 0;
             padding: 0;
             min-height: 100vh;
             color: #4E342E;
             overflow-x: hidden;
-            touch-action: manipulation; /* ダブルタップズーム防止 */
+            touch-action: manipulation;
+            user-select: none;
         }
 
         /* 画面切り替えの仕組み */
@@ -51,32 +52,45 @@
             color: #FFF;
             text-shadow: 3px 3px 0px #BF360C;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 40px;
             line-height: 1.2;
         }
 
-        .start-btn {
-            background-color: #FFF;
-            color: #E65100;
+        .mode-btn {
+            width: 280px;
             font-size: 1.5rem;
-            padding: 15px 50px;
+            padding: 15px 0;
             border-radius: 50px;
             border: none;
-            box-shadow: 0 6px 0px #E65100;
             cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s;
-            margin-top: 30px;
+            transition: transform 0.1s;
+            margin: 10px 0;
+            color: white;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .start-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0px #E65100;
+        .mode-btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-practice {
+            background-color: #4CAF50; /* 緑 */
+            box-shadow: 0 6px 0px #2E7D32;
+        }
+        
+        .btn-test {
+            background-color: #F44336; /* 赤 */
+            box-shadow: 0 6px 0px #C62828;
         }
 
         /* --- 2. 一覧画面 --- */
         #list-screen {
-            justify-content: flex-start; /* 上寄せ */
-            padding-top: 40px;
+            justify-content: flex-start;
+            padding-top: 20px;
         }
 
         .header-info {
@@ -86,13 +100,19 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             margin-bottom: 20px;
             display: flex;
-            gap: 20px;
+            flex-direction: column;
             align-items: center;
+            width: 90%;
+            max-width: 600px;
         }
-
-        .star-display {
-            font-size: 1.2rem;
-            color: #F57F17;
+        
+        .mode-badge {
+            font-size: 1rem;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: white;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
 
         .kanji-grid {
@@ -124,26 +144,38 @@
             box-shadow: 0 2px 0px #D7CCC8;
         }
 
-        /* クリア済みのデザイン */
-        .kanji-card.completed {
-            background-color: #FFFDE7;
-            border-color: #FFD700;
-            color: #F57F17;
+        /* クリアマーク（星・王冠） */
+        .mark {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 1.5rem;
+            text-shadow: 1px 1px 0 #FFF;
+            display: none;
+            z-index: 2;
         }
 
-        .kanji-card.completed::after {
-            content: "★";
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            font-size: 1.2rem;
-            color: #FFD700;
-            text-shadow: 1px 1px 0 #FFF;
+        /* 練習クリア */
+        .kanji-card.cleared-practice {
+            background-color: #F1F8E9; /* 薄緑 */
+            border-color: #8BC34A;
         }
+        .kanji-card.cleared-practice .star-mark { display: block; }
+
+        /* テストクリア */
+        .kanji-card.cleared-test {
+            background-color: #FFEBEE; /* 薄赤 */
+            border-color: #EF5350;
+        }
+        .kanji-card.cleared-test .crown-mark { display: block; }
 
         /* --- 3. 練習画面 --- */
         #practice-screen {
-            background-color: #E0F7FA;
+            background-color: #E0F7FA; /* 練習モード背景 */
+        }
+        
+        #practice-screen.test-bg {
+            background-color: #FFEBEE; /* テストモード背景 */
         }
 
         .practice-header {
@@ -155,14 +187,15 @@
             margin-bottom: 20px;
         }
 
-        .back-btn {
-            background: #00838F;
+        .nav-btn {
+            background: #607D8B;
             color: white;
             border: none;
             padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
             font-family: inherit;
+            box-shadow: 0 3px 0 #455A64;
         }
 
         .target-char-display {
@@ -174,7 +207,7 @@
             background: white;
             padding: 15px;
             border-radius: 20px;
-            box-shadow: 0 8px 0px #4DD0E1;
+            box-shadow: 0 8px 0px #B0BEC5;
             margin-bottom: 20px;
             position: relative;
         }
@@ -182,14 +215,13 @@
         #character-target-div {
             width: 300px;
             height: 300px;
-            /* スマホでの誤操作防止 */
             touch-action: none;
         }
 
         #message-area {
             height: 40px;
             font-size: 1.2rem;
-            color: #006064;
+            color: #333;
             text-align: center;
             font-weight: bold;
         }
@@ -201,18 +233,17 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        .star-animation {
+        .reward-animation {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             font-size: 10rem;
-            color: #FFD700;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
             animation: pop 0.5s ease-out;
             pointer-events: none;
             display: none;
             z-index: 100;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
         }
 
     </style>
@@ -221,32 +252,46 @@
 
     <div id="title-screen" class="screen active">
         <div class="game-title">1ねんせい<br>かんじ<br>マスター</div>
-        <button class="start-btn" onclick="showScreen('list-screen')">スタート！</button>
+        
+        <button class="mode-btn btn-practice" onclick="selectMode('practice')">
+            <span>⭐</span> れんしゅう
+        </button>
+        <button class="mode-btn btn-test" onclick="selectMode('test')">
+            <span>👑</span> テスト
+        </button>
     </div>
 
     <div id="list-screen" class="screen">
         <div class="header-info">
-            <div>あつめた星： <span id="star-counter" style="font-size:1.5rem; font-weight:bold;">0</span> / 80</div>
+            <div id="mode-display" class="mode-badge"></div>
+            <div style="font-size:1.2rem;">
+                あつめた数： <span id="star-counter" style="font-size:1.5rem; font-weight:bold;">0</span> / 80
+            </div>
+            <button class="nav-btn" onclick="showScreen('title-screen')" style="margin-top:10px; font-size:0.8rem;">タイトルへ</button>
         </div>
+        
         <div class="kanji-grid" id="kanji-grid">
             </div>
-        <button class="back-btn" onclick="resetData()" style="margin-top:20px; background:#B0BEC5; font-size:0.8rem;">データを消す</button>
+        
+        <button class="nav-btn" onclick="resetData()" style="margin-top:30px; background:#B0BEC5; font-size:0.7rem;">データを消す</button>
     </div>
 
     <div id="practice-screen" class="screen">
         <div class="practice-header">
-            <button class="back-btn" onclick="showScreen('list-screen')">もどる</button>
+            <button class="nav-btn" onclick="showScreen('list-screen')">もどる</button>
             <div id="current-reading" class="target-char-display">よみ</div>
-            <div style="width: 60px;"></div> </div>
+            <div style="width: 60px;"></div>
+        </div>
 
         <div class="canvas-container">
             <div id="character-target-div"></div>
-            <div id="big-star" class="star-animation">★</div>
+            <div id="anim-star" class="reward-animation">⭐</div>
+            <div id="anim-crown" class="reward-animation">👑</div>
         </div>
 
         <div id="message-area">なぞってみよう！</div>
 
-        <button class="back-btn" onclick="retry()" style="background:#FF7043; margin-top:10px;">書き直す</button>
+        <button class="nav-btn" onclick="retry()" style="background:#FF7043; margin-top:10px;">書き直す</button>
     </div>
 
     <script>
@@ -275,85 +320,136 @@
         ];
 
         // 状態管理
-        let progress = JSON.parse(localStorage.getItem('kanjiMasterProgress')) || {};
+        let progressPractice = JSON.parse(localStorage.getItem('kanjiMasterPractice')) || {};
+        let progressTest = JSON.parse(localStorage.getItem('kanjiMasterTest')) || {};
+        
         let writer;
         let currentChar = null;
+        let currentMode = 'practice'; // 'practice' or 'test'
 
         // --- 画面遷移 ---
         function showScreen(screenId) {
-            // すべての画面を非表示
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            // 指定された画面を表示
             document.getElementById(screenId).classList.add('active');
-
-            // 一覧画面を開くときはリストを更新
+            
             if (screenId === 'list-screen') {
                 renderList();
             }
+        }
+
+        // --- モード選択 ---
+        function selectMode(mode) {
+            currentMode = mode;
+            showScreen('list-screen');
         }
 
         // --- 一覧画面の描画 ---
         function renderList() {
             const grid = document.getElementById('kanji-grid');
             grid.innerHTML = '';
-            let stars = 0;
+            
+            // モードごとの表示切り替え
+            const badge = document.getElementById('mode-display');
+            const counter = document.getElementById('star-counter');
+            let count = 0;
+            const targetProgress = (currentMode === 'practice') ? progressPractice : progressTest;
+
+            if (currentMode === 'practice') {
+                badge.textContent = "⭐ れんしゅうモード";
+                badge.style.backgroundColor = "#4CAF50";
+            } else {
+                badge.textContent = "👑 テストモード";
+                badge.style.backgroundColor = "#F44336";
+            }
 
             kanjiData.forEach(item => {
-                const isCompleted = progress[item.char];
-                if (isCompleted) stars++;
+                const isCleared = targetProgress[item.char];
+                if (isCleared) count++;
 
                 const card = document.createElement('div');
-                card.className = `kanji-card ${isCompleted ? 'completed' : ''}`;
-                card.innerText = item.char;
-                card.onclick = () => startPractice(item);
-
+                // クラス分けで色を変える
+                card.className = `kanji-card`;
+                if (isCleared) {
+                    card.classList.add(currentMode === 'practice' ? 'cleared-practice' : 'cleared-test');
+                }
+                
+                card.innerHTML = `
+                    ${item.char}
+                    <div class="mark star-mark">⭐</div>
+                    <div class="mark crown-mark">👑</div>
+                `;
+                
+                card.onclick = () => startApp(item);
                 grid.appendChild(card);
             });
 
-            document.getElementById('star-counter').innerText = stars;
+            counter.innerText = count;
         }
 
-        // --- 練習開始 ---
-        function startPractice(item) {
+        // --- アプリ開始（練習orテスト） ---
+        function startApp(item) {
             currentChar = item;
             showScreen('practice-screen');
 
+            // 背景色とメッセージの切り替え
+            const screen = document.getElementById('practice-screen');
+            const msgArea = document.getElementById('message-area');
+            
+            if (currentMode === 'test') {
+                screen.classList.add('test-bg');
+                msgArea.innerText = "おもいだして かいてみよう！";
+                msgArea.style.color = "#C62828";
+            } else {
+                screen.classList.remove('test-bg');
+                msgArea.innerText = "うすいせんを なぞろう！";
+                msgArea.style.color = "#006064";
+            }
+
             // UIリセット
             document.getElementById('current-reading').innerText = `${item.char} (${item.reading})`;
-            document.getElementById('message-area').innerText = "じゅんばんに なぞろう！";
-            document.getElementById('message-area').style.color = "#006064";
             document.getElementById('character-target-div').innerHTML = '';
-            document.getElementById('big-star').style.display = 'none'; // 星を隠す
+            document.getElementById('anim-star').style.display = 'none';
+            document.getElementById('anim-crown').style.display = 'none';
 
-            // HanziWriter 初期化
+            // HanziWriter 設定
+            // テストモードなら showOutline を false にする
+            const isTest = (currentMode === 'test');
+
             writer = HanziWriter.create('character-target-div', item.char, {
                 width: 300,
                 height: 300,
                 padding: 10,
-                showOutline: true,
+                showOutline: !isTest, // テストなら下絵なし！
                 strokeAnimationSpeed: 1,
                 delayBetweenStrokes: 200,
                 radicalColor: '#168F16',
-                drawingWidth: 25, // 子供用に少し太く
+                drawingWidth: 25,
                 outlineColor: '#DDD',
                 strokeColor: '#333',
                 highlightColor: '#FF7043',
+                showHintAfterMisses: 1 // 間違えたらヒントを出す（子供への優しさ）
             });
 
             startQuiz();
         }
 
-        // --- クイズ（なぞり書き）ロジック ---
+        // --- クイズロジック ---
         function startQuiz() {
             writer.quiz({
                 onMistake: function(strokeData) {
-                    document.getElementById('message-area').innerText = "おしい！ここだよ！";
-                    document.getElementById('message-area').style.color = "#D32F2F";
-                    writer.animateStroke(strokeData.strokeNum); // ヒントを表示
+                    const msg = document.getElementById('message-area');
+                    if (currentMode === 'test') {
+                        msg.innerText = "おしい！ ヒントをみてね";
+                    } else {
+                        msg.innerText = "ここだよ！";
+                    }
+                    msg.style.color = "#D32F2F";
+                    // ライブラリが自動でヒントを出してくれます
                 },
                 onCorrectStroke: function(strokeData) {
-                    document.getElementById('message-area').innerText = "いいね！";
-                    document.getElementById('message-area').style.color = "#388E3C";
+                    const msg = document.getElementById('message-area');
+                    msg.innerText = "いいね！";
+                    msg.style.color = "#388E3C";
                 },
                 onComplete: function(summaryData) {
                     handleComplete();
@@ -361,19 +457,23 @@
             });
         }
 
-        // --- クリア時の処理 ---
+        // --- クリア処理 ---
         function handleComplete() {
-            document.getElementById('message-area').innerText = "できたー！！";
-            document.getElementById('message-area').style.color = "#F57F17";
+            const msg = document.getElementById('message-area');
             
-            // データを保存
-            progress[currentChar.char] = true;
-            localStorage.setItem('kanjiMasterProgress', JSON.stringify(progress));
+            // 演出と保存
+            if (currentMode === 'practice') {
+                msg.innerText = "できたー！ ⭐ゲット！";
+                document.getElementById('anim-star').style.display = 'block';
+                progressPractice[currentChar.char] = true;
+                localStorage.setItem('kanjiMasterPractice', JSON.stringify(progressPractice));
+            } else {
+                msg.innerText = "すごい！！ 👑ゲット！";
+                document.getElementById('anim-crown').style.display = 'block';
+                progressTest[currentChar.char] = true;
+                localStorage.setItem('kanjiMasterTest', JSON.stringify(progressTest));
+            }
 
-            // 派手な演出
-            const bigStar = document.getElementById('big-star');
-            bigStar.style.display = 'block';
-            
             // 1.5秒後に一覧に戻る
             setTimeout(() => {
                 showScreen('list-screen');
@@ -381,19 +481,18 @@
         }
 
         function retry() {
-            startPractice(currentChar);
+            startApp(currentChar);
         }
 
         function resetData() {
-            if (confirm("ほんとうに データを けしますか？")) {
-                localStorage.removeItem('kanjiMasterProgress');
-                progress = {};
+            if (confirm("すべてのデータを けしますか？")) {
+                localStorage.removeItem('kanjiMasterPractice');
+                localStorage.removeItem('kanjiMasterTest');
+                progressPractice = {};
+                progressTest = {};
                 renderList();
             }
         }
-
-        // --- 初期化 ---
-        // 読み込み時は何もしない（HTMLでタイトル画面がactiveになっているため）
 
     </script>
 </body>
