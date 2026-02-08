@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1年生のかんじドリル</title>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <style>
+        body {
+            font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #E0F7FA; /* 子供向けに明るい水色 */
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #006064;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .progress {
+            font-size: 1.2rem;
+            color: #00838F;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        /* メインの練習エリア */
+        .practice-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+            border: 5px solid #4DD0E1;
+        }
+
+        /* 漢字を表示する領域 */
+        #character-target-div {
+            width: 300px;
+            height: 300px;
+            border: 2px dashed #B2EBF2;
+            border-radius: 10px;
+            cursor: pointer;
+            touch-action: none; 
+            background-color: #FAFAFA;
+        }
+
+        /* 読み仮名のスタイル */
+        .reading-box {
+            margin-left: 20px;
+            width: 60px;
+            text-align: center;
+            background-color: #FFF9C4; /* 薄い黄色 */
+            padding: 10px 5px;
+            border-radius: 10px;
+            border: 2px solid #FFF176;
+        }
+
+        .reading-text {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            letter-spacing: 0.2rem;
+            height: 100%;
+        }
+
+        /* メッセージ表示 */
+        #status-msg {
+            height: 2rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #006064;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* 操作ボタン */
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        button:active {
+            transform: translateY(2px);
+        }
+
+        /* 次へボタン */
+        button.primary {
+            background-color: #FF7043; /* オレンジ */
+            color: white;
+        }
+
+        /* 書き直すボタン */
+        button.secondary {
+            background-color: #78909C;
+            color: white;
+        }
+
+        /* ヒントボタン */
+        button.hint {
+            background-color: #26A69A;
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>1ねんせい かんじドリル</h1>
+    <div class="progress" id="progress-text">もんめ</div>
+
+    <div class="practice-area">
+        <div id="character-target-div"></div>
+        
+        <div class="reading-box">
+            <div id="reading-text" class="reading-text"></div>
+        </div>
+    </div>
+
+    <div id="status-msg">なぞってみよう！</div>
+
+    <div class="controls">
+        <button class="secondary" onclick="resetWriter()">かきなおす</button>
+        <button class="hint" onclick="animateStroke()">ヒント</button>
+        <button class="primary" onclick="nextChar()">つぎへ</button>
+    </div>
+
+    <script>
+        // 小学1年生の漢字リスト（80字）
+        const originalList = [
+            { char: '一', reading: 'いち' }, { char: '右', reading: 'みぎ' },
+            { char: '雨', reading: 'あめ' }, { char: '円', reading: 'えん' },
+            { char: '王', reading: 'おう' }, { char: '音', reading: 'おと' },
+            { char: '下', reading: 'した' }, { char: '火', reading: 'ひ' },
+            { char: '花', reading: 'はな' }, { char: '貝', reading: 'かい' },
+            { char: '学', reading: 'まなぶ' }, { char: '気', reading: 'き' },
+            { char: '九', reading: 'きゅう' }, { char: '休', reading: 'やすむ' },
+            { char: '玉', reading: 'たま' }, { char: '金', reading: 'かね' },
+            { char: '空', reading: 'そら' }, { char: '月', reading: 'つき' },
+            { char: '犬', reading: 'いぬ' }, { char: '見', reading: 'みる' },
+            { char: '五', reading: 'ご' }, { char: '口', reading: 'くち' },
+            { char: '校', reading: 'こう' }, { char: '左', reading: 'ひだり' },
+            { char: '三', reading: 'さん' }, { char: '山', reading: 'やま' },
+            { char: '子', reading: 'こ' }, { char: '四', reading: 'よん' },
+            { char: '糸', reading: 'いと' }, { char: '字', reading: 'じ' },
+            { char: '耳', reading: 'みみ' }, { char: '七', reading: 'なな' },
+            { char: '車', reading: 'くるま' }, { char: '手', reading: 'て' },
+            { char: '十', reading: 'じゅう' }, { char: '出', reading: 'でる' },
+            { char: '女', reading: 'おんな' }, { char: '小', reading: 'ちいさい' },
+            { char: '上', reading: 'うえ' }, { char: '森', reading: 'もり' },
+            { char: '人', reading: 'ひと' }, { char: '水', reading: 'みず' },
+            { char: '正', reading: 'ただしい' }, { char: '生', reading: 'いきる' },
+            { char: '青', reading: 'あお' }, { char: '夕', reading: 'ゆう' },
+            { char: '石', reading: 'いし' }, { char: '赤', reading: 'あか' },
+            { char: '千', reading: 'せん' }, { char: '川', reading: 'かわ' },
+            { char: '先', reading: 'さき' }, { char: '早', reading: 'はやい' },
+            { char: '草', reading: 'くさ' }, { char: '足', reading: 'あし' },
+            { char: '村', reading: 'むら' }, { char: '大', reading: 'おおきい' },
+            { char: '男', reading: 'おとこ' }, { char: '竹', reading: 'たけ' },
+            { char: '中', reading: 'なか' }, { char: '虫', reading: 'むし' },
+            { char: '町', reading: 'まち' }, { char: '天', reading: 'てん' },
+            { char: '田', reading: 'た' }, { char: '土', reading: 'つち' },
+            { char: '二', reading: 'に' }, { char: '日', reading: 'ひ' },
+            { char: '入', reading: 'はいる' }, { char: '年', reading: 'とし' },
+            { char: '白', reading: 'しろ' }, { char: '八', reading: 'はち' },
+            { char: '百', reading: 'ひゃく' }, { char: '文', reading: 'ぶん' },
+            { char: '木', reading: 'き' }, { char: '本', reading: 'ほん' },
+            { char: '名', reading: 'な' }, { char: '目', reading: 'め' },
+            { char: '立', reading: 'たつ' }, { char: '力', reading: 'ちから' },
+            { char: '林', reading: 'はやし' }, { char: '六', reading: 'ろく' }
+        ];
+
+        let kanjiList = []; // シャッフル後のリスト
+        let currentIndex = 0;
+        let writer;
+
+        // 配列をシャッフルする関数
+        function shuffle(array) {
+            let newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 初期化処理
+        function init() {
+            kanjiList = shuffle(originalList);
+            currentIndex = 0;
+            loadChar();
+        }
+
+        function loadChar() {
+            if (currentIndex >= kanjiList.length) {
+                // 全問終了時
+                document.getElementById('status-msg').textContent = "ぜんぶおわりました！すごい！";
+                document.getElementById('character-target-div').innerHTML = "💮";
+                document.getElementById('character-target-div').style.fontSize = "150px";
+                document.getElementById('character-target-div').style.display = "flex";
+                document.getElementById('character-target-div').style.alignItems = "center";
+                document.getElementById('character-target-div').style.justifyContent = "center";
+                return;
+            }
+
+            const targetChar = kanjiList[currentIndex];
+            
+            // UI更新
+            document.getElementById('reading-text').textContent = targetChar.reading;
+            document.getElementById('progress-text').textContent = `${currentIndex + 1} / ${kanjiList.length} もんめ`;
+            document.getElementById('status-msg').textContent = "なぞってみよう！";
+            document.getElementById('status-msg').style.color = "#006064";
+
+            // 以前の描画があれば削除
+            document.getElementById('character-target-div').innerHTML = '';
+            document.getElementById('character-target-div').style.display = "block"; // 終了画面からの復帰用
+
+            // HanziWriterの設定
+            writer = HanziWriter.create('character-target-div', targetChar.char, {
+                width: 300,
+                height: 300,
+                padding: 10,
+                showOutline: true, // 下絵を表示
+                strokeAnimationSpeed: 1, 
+                delayBetweenStrokes: 200, // ストローク間の待ち時間
+                radicalColor: '#168F16',
+                drawingWidth: 20, // 線の太さ
+                strokeColor: '#333', // 線の色
+                highlightColor: '#FF7043', // ヒントの色
+                outlineColor: '#DDD', // 下絵の色
+            });
+
+            // クイズモードを開始
+            startQuiz();
+        }
+
+        function startQuiz() {
+            writer.quiz({
+                onMistake: function(strokeData) {
+                    document.getElementById('status-msg').textContent = "ちがうよ！かきじゅん は あってる？";
+                    document.getElementById('status-msg').style.color = "#D32F2F";
+                    
+                    // 間違えたらその画だけヒントアニメーションを表示
+                    writer.animateStroke(strokeData.strokeNum);
+                },
+                onCorrectStroke: function(strokeData) {
+                    document.getElementById('status-msg').textContent = "いい感じ！";
+                    document.getElementById('status-msg').style.color = "#388E3C";
+                },
+                onComplete: function(summaryData) {
+                    document.getElementById('status-msg').textContent = "できた！せいかい！🎉";
+                    document.getElementById('status-msg').style.color = "#007bff";
+                    
+                    // 正解したら自動で少し待ってから次へ行きたい場合は以下のコメントアウトを外す
+                    // setTimeout(nextChar, 1500); 
+                }
+            });
+        }
+
+        function resetWriter() {
+            startQuiz();
+        }
+
+        function animateStroke() {
+            writer.animateStroke(0); // 最初の画からアニメーション
+        }
+
+        function nextChar() {
+            currentIndex++;
+            loadChar();
+        }
+
+        // ページ読み込み時に開始
+        window.onload = init;
+
+    </script>
+</body>
+</html>
