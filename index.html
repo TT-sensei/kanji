@@ -399,13 +399,13 @@
             const readingDisplay = document.getElementById('current-reading');
             
             if (currentMode === 'test') {
-                // 【ここが変わった】テストモードなら読み仮名だけを大きく表示！
+                // テストモードなら読み仮名だけを大きく表示
                 screen.classList.add('test-bg');
                 msgArea.innerText = "この かんじ を かこう！";
                 msgArea.style.color = "#C62828";
                 
-                readingDisplay.innerText = item.reading; // 読みだけ
-                readingDisplay.style.fontSize = "3rem";  // 大きく
+                readingDisplay.innerText = item.reading;
+                readingDisplay.style.fontSize = "3rem";
             } else {
                 // 練習モードなら漢字と読みを表示
                 screen.classList.remove('test-bg');
@@ -413,7 +413,7 @@
                 msgArea.style.color = "#006064";
                 
                 readingDisplay.innerText = `${item.char} (${item.reading})`;
-                readingDisplay.style.fontSize = "2rem"; // 普通
+                readingDisplay.style.fontSize = "2rem";
             }
 
             // UIリセット
@@ -428,7 +428,7 @@
                 width: 300,
                 height: 300,
                 padding: 10,
-                showOutline: !isTest, // テストなら下絵なし
+                showOutline: !isTest, 
                 strokeAnimationSpeed: 1,
                 delayBetweenStrokes: 200,
                 radicalColor: '#168F16',
@@ -437,11 +437,23 @@
                 strokeColor: '#333',
                 highlightColor: '#FF7043',
                 showHintAfterMisses: 1,
-                // 【重要】ここが日本語データを読み込むための追加コードです
+                
+                // 【修正版】日本語データ読み込み設定（安全装置付き）
                 charDataLoader: (char, onComplete) => {
-                    fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data-jp@0.5/${char}.json`)
-                        .then(res => res.json())
-                        .then(data => onComplete(data));
+                    // まず日本式のデータをGitHub CDNから取得
+                    fetch(`https://cdn.jsdelivr.net/gh/chanind/hanzi-writer-data-jp@master/data/${char}.json`)
+                        .then(res => {
+                            if (!res.ok) throw new Error('Not found');
+                            return res.json();
+                        })
+                        .then(data => onComplete(data))
+                        .catch(err => {
+                            // もし日本式データ取得に失敗したら、標準（中国式）データを使う
+                            console.log("JP Data not found, falling back to default.");
+                            fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${char}.json`)
+                                .then(res => res.json())
+                                .then(data => onComplete(data));
+                        });
                 }
             });
 
